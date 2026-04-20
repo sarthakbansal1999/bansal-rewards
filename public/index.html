@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bansal Rewards</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #000, #333);
+      margin: 0;
+      color: white;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 30px;
+    }
+
+    .card {
+      background: white;
+      color: black;
+      padding: 25px;
+      margin: 30px auto;
+      width: 90%;
+      max-width: 360px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 12px;
+      margin: 8px;
+      width: 90%;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .primary { background: black; color: white; }
+    .green { background: #00c853; color: white; }
+    .red { background: #d50000; color: white; }
+    .secondary { background: #eee; }
+
+    .hidden { display: none; }
+
+    /* DASHBOARD STYLING */
+    .points-box {
+      background: #111;
+      color: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 15px 0;
+    }
+
+    .points-box h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    /* PROGRESS BAR */
+    .progress-container {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .progress-bg {
+      width: 100%;
+      height: 26px;
+      background: #eee;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00c853, #64dd17);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      transition: width 0.4s ease;
+    }
+
+    /* HISTORY */
+    ul {
+      text-align: left;
+      padding-left: 18px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .ref-box {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h2>Bansal Rewards</h2>
+
+<!-- LOGIN -->
+<div id="loginCard" class="card">
+  <h3>Login</h3>
+  <input id="loginPhone" placeholder="Enter Phone Number">
+  <button class="primary" onclick="login()">Login</button>
+  <button class="secondary" onclick="showSignup()">Create Account</button>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupCard" class="card hidden">
+  <h3>Signup</h3>
+  <input id="name" placeholder="Full Name">
+  <input id="phone" placeholder="Phone Number">
+  <input id="referral" placeholder="Referral Code (optional)">
+  <button class="primary" onclick="signup()">Create Account</button>
+  <button class="secondary" onclick="showLogin()">Back to Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="card hidden">
+
+  <h3 id="dName"></h3>
+
+  <div class="points-box">
+    <p>Your Points</p>
+    <h1 id="dPoints">0</h1>
+  </div>
+
+  <div class="ref-box">
+    Referral Code: <span id="dRef"></span>
+  </div>
+  
+<p id="statusMessage" style="font-weight:bold;"></p>
+
+  <!-- PROGRESS -->
+  <div class="progress-container">
+    <p id="progressText"></p>
+    <div class="progress-bg">
+      <div id="progressBar" class="progress-fill">0%</div>
+    </div>
+  </div>
+
+<div style="margin-top:20px; text-align:left;">
+
+  <h4>🎁 Your Benefits</h4>
+
+  <ul style="padding-left:18px; line-height:1.6;">
+    <li>Earn <b>20 points</b> for every referral</li>
+    <li>Redeem <b>100 points = ₹100 discount(T&C*)</b></li>
+    <li>Show your number at store to redeem</li>
+    <li>No expiry on points</li>
+  </ul>
+
+</div>
+
+  <!-- HISTORY -->
+  <h4>Redemption History</h4>
+  <ul id="historyList"></ul>
+
+  <button class="green" onclick="share()">📲 Share on WhatsApp</button>
+  <button class="red" onclick="logout()">Logout</button>
+
+</div>
+
+<script>
+
+const BASE_URL = "";
+
+/* UI SWITCH */
+function showSignup() {
+  loginCard.classList.add("hidden");
+  signupCard.classList.remove("hidden");
+}
+
+function showLogin() {
+  signupCard.classList.add("hidden");
+  loginCard.classList.remove("hidden");
+}
+
+/* SIGNUP */
+async function signup() {
+  const name = nameInput.value;
+  const phone = phoneInput.value;
+  const referralCode = referral.value;
+
+  await fetch(BASE_URL + "/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name, phone, referralCode })
+  });
+
+  alert("Signup successful");
+  showLogin();
+}
+
+/* LOGIN */
+async function login() {
+  const phone = loginPhone.value;
+
+  const res = await fetch(BASE_URL + "/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ phone })
+  });
+
+  const data = await res.json();
+
+  if (!data._id) {
+    alert("User not found");
+    return;
+  }
+
+  localStorage.setItem("phone", phone);
+  loadDashboard(phone);
+}
+
+/* DASHBOARD */
+async function loadDashboard(phone) {
+  const res = await fetch(BASE_URL + "/user/" + phone);
+  const data = await res.json();
+
+  dName.innerText = "Hi, " + data.name;
+  dPoints.innerText = data.points;
+  dRef.innerText = data.referralCode;
+
+
+  /* PROGRESS */
+  let percent = Math.min(data.points, 100);
+  progressBar.style.width = percent + "%";
+  progressBar.innerText = percent + "%";
+
+  progressText.innerText =
+    data.points >= 100
+    ? "🎉 You can redeem now!"
+    : `${100 - data.points} points to go`;
+
+  /* HISTORY */
+  historyList.innerHTML = "";
+
+  if (data.redemptions?.length) {
+    data.redemptions.forEach(r => {
+      let li = document.createElement("li");
+      li.innerText = `${r.pointsUsed} pts used on ${new Date(r.date).toLocaleDateString()}`;
+      historyList.appendChild(li);
+    });
+  } else {
+    historyList.innerHTML = "<li>No redemptions yet</li>";
+  }
+
+  loginCard.classList.add("hidden");
+  signupCard.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+}
+
+/* SHARE */
+function share() {
+  const code = dRef.innerText;
+  const msg = `Join Bansal Rewards!\nUse code: ${code}`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(msg));
+}
+
+/* LOGOUT */
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
+
+/* AUTO LOGIN */
+window.onload = () => {
+  const phone = localStorage.getItem("phone");
+  if (phone) loadDashboard(phone);
+};
+
+</script>
+
+</body>
+</html>

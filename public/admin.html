@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bansal Rewards - Admin</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #000, #333);
+      margin: 0;
+      color: white;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      color: black;
+      padding: 20px;
+      margin: 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 90%;
+      padding: 12px;
+      margin: 6px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .primary { background: black; color: white; }
+    .green { background: #00c853; color: white; }
+    .red { background: #d50000; color: white; }
+    .blue { background: #2962ff; color: white; }
+
+    #redeemBtn {
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f1f1;
+    }
+
+    .result-box {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Admin Panel</h2>
+
+<div class="container">
+
+  <!-- USER CHECK -->
+  <div class="card">
+    <h3>Check Customer</h3>
+
+    <input id="phone" placeholder="Enter Phone Number">
+    <input type="password" id="password" placeholder="Admin Password">
+
+    <button class="primary" onclick="checkUser()">Check User</button>
+
+    <div id="result" class="result-box"></div>
+
+    <button id="redeemBtn" class="green" onclick="redeem()">
+      Redeem 100 Points
+    </button>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card">
+    <h3>Admin Actions</h3>
+
+    <button class="blue" onclick="loadUsers()">View All Users</button>
+    <button class="primary" onclick="exportCSV()">Download CSV</button>
+
+    <div id="userTable"></div>
+  </div>
+
+</div>
+
+<script>
+
+const API = "";
+let currentPhone = "";
+
+/* ---------------- CHECK USER ---------------- */
+async function checkUser() {
+  const phone = document.getElementById("phone").value;
+
+  if (!phone) {
+    alert("Enter phone number");
+    return;
+  }
+
+  const res = await fetch(API + "/user/" + phone);
+  const data = await res.json();
+
+  const result = document.getElementById("result");
+  const redeemBtn = document.getElementById("redeemBtn");
+
+  if (data.message) {
+    result.innerText = data.message;
+    redeemBtn.style.display = "none";
+    return;
+  }
+
+  currentPhone = phone;
+
+  result.innerText = `Name: ${data.name} | Points: ${data.points}`;
+
+  if (data.points >= 100) {
+    redeemBtn.style.display = "block";
+  } else {
+    redeemBtn.style.display = "none";
+  }
+}
+
+/* ---------------- REDEEM ---------------- */
+async function redeem() {
+  const password = document.getElementById("password").value;
+
+  if (!password) {
+    alert("Enter admin password");
+    return;
+  }
+
+  const res = await fetch(API + "/admin/redeem", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      phone: currentPhone,
+      adminPassword: password
+    })
+  });
+
+  const data = await res.json();
+
+  alert(data.message);
+
+  if (res.status === 200) {
+    checkUser(); // refresh points
+  }
+}
+
+/* ---------------- LOAD USERS ---------------- */
+async function loadUsers() {
+  const res = await fetch(API + "/admin/users");
+  const users = await res.json();
+
+  let html = `
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Points</th>
+      </tr>
+  `;
+
+  users.forEach(u => {
+    html += `
+      <tr>
+        <td>${u.name}</td>
+        <td>${u.phone}</td>
+        <td>${u.points}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("userTable").innerHTML = html;
+}
+
+/* ---------------- EXPORT CSV ---------------- */
+function exportCSV() {
+  window.open(API + "/admin/export-csv");
+}
+
+</script>
+
+</body>
+</html>
