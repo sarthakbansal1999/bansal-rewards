@@ -276,7 +276,21 @@ async function loadDashboard(phone) {
 /* SHARE */
 function share() {
   const code = dRef.innerText;
-  const msg = `Join Bansal Rewards!\nUse code: ${code}`;
+
+  const link = "https://bansal-rewards.onrender.com";
+
+  const msg = 
+`🎉 Join Bansal Rewards!
+
+Earn exciting rewards on every referral 💰
+
+👉 Use my code: ${code} to get 20 points instantly!
+
+🔗 Click here to join:
+${link}
+
+Start earning now 🚀`;
+
   window.open("https://wa.me/?text=" + encodeURIComponent(msg));
 }
 
