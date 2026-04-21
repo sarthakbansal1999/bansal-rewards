@@ -198,23 +198,25 @@ function showLogin() {
 
 /* SIGNUP */
 async function signup() {
-  const name = nameInput.value;
-  const phone = phoneInput.value;
-  const referralCode = referral.value;
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const referralCode = document.getElementById("referral").value;
 
-  await fetch(BASE_URL + "/signup", {
+  const res = await fetch(BASE_URL + "/signup", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ name, phone, referralCode })
   });
 
-  alert("Signup successful");
+  const data = await res.json();
+
+  alert(data.message || "Signup done");
   showLogin();
 }
 
 /* LOGIN */
 async function login() {
-  const phone = loginPhone.value;
+  const phone = document.getElementById("loginPhone").value;
 
   const res = await fetch(BASE_URL + "/login", {
     method: "POST",
