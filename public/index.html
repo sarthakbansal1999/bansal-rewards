@@ -130,7 +130,8 @@
   <h3>Signup</h3>
   <input id="name" placeholder="Full Name">
   <input id="phone" placeholder="Phone Number">
-  <input id="referral" placeholder="Referral Code (optional)">
+  <input id="referral" placeholder="Referral Code (optional)" 
+oninput="this.value = this.value.toUpperCase()">
   <button class="primary" onclick="signup()">Create Account</button>
   <button class="secondary" onclick="showLogin()">Back to Login</button>
 </div>

@@ -38,7 +38,11 @@ app.get("/", (req, res) => {
 /* ---------------- SIGNUP ---------------- */
 app.post("/signup", async (req, res) => {
   try {
-    const { name, phone, referralCode } = req.body;
+   let { name, phone, referralCode } = req.body;
+
+if (referralCode) {
+  referralCode = referralCode.toUpperCase();
+}
 
     // Check if user already exists
     const existingUser = await User.findOne({ phone });
